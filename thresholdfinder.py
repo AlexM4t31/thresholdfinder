@@ -6,6 +6,7 @@ from tkinter import ttk
 from tkinter import filedialog, messagebox
 from PIL import Image, ImageTk
 import pandas as pd
+import yaml
 
 # here's something that I want to be extra careful about:
 # simulation instances that, although they exist, their image does not
@@ -23,11 +24,49 @@ class ImageReviewerApp:
         ttk.Combobox(root, textvariable=self.experiment_name, values=["testexp1", "testexp2"], width=60).grid(row=0, column=1, padx=5, pady=5, sticky="ew")
         tk.Button(root, text="Go", command=self.get_experiment).grid(row=0, column=2, padx=5, pady=5)
 
-        tk.Label(root, text="Combo index:").grid(row=1, column=0, sticky="w", padx=5)
-        self.crt_combo_index_label = tk.Label(root, text="Combo index: N/A")
-        self.crt_combo_index_label.grid(row=1, column=0, sticky="w", padx=5)
-
+        # I've got an idea for how to incorporate the 
+        # current combo id label more fluidly from a visual standpoint.
         
+        # self.crt_combo_index_label = tk.Label(root, text="Combo index: N/A")
+        # self.crt_combo_index_label.grid(row=1, column=0, sticky="w", padx=5)
+
+        # first the frame for the combo id nav stuff. 
+
+        combo_main_frame = tk.Frame(root)
+        combo_main_frame.grid(row=2, column=0, columnspan=10, padx=5, pady=5)
+
+        tk.Button(combo_main_frame, text="⟨ Previous ID", command=self.previous_combo_id).grid(row=0, column=0, padx=10)
+    
+        self.crt_combo_index_label = tk.Label(combo_main_frame, text="Combo index: N/A")
+        self.crt_combo_index_label.grid(row=0,column=1)
+    
+        tk.Button(combo_main_frame, text="Next ID ⟩", command=self.next_combo_id).grid(row=0, column=2, padx=10)
+    
+        self.combo_verdict_label = tk.Label(combo_main_frame, text="Threshold discovered: N/A")
+        self.combo_verdict_label.grid(row = 1, column = 0, columnspan=3)
+        self.combo_verdict_label.config(bg="gray")
+
+        instance_frame = tk.Frame(root)
+        instance_frame.grid(row=3, column=0, columnspan=3, padx=5, pady=5)
+
+        self.image_frame = tk.Frame(instance_frame)  
+        self.image_frame.grid(row=0, column=0, columnspan=3, padx=5, pady=5)
+
+        self.instance_label = tk.Label(instance_frame, text = "Instance index: N/A")
+        self.instance_label.grid(row=1,column=0,columnspan=3,padx=5,pady=5)
+
+        tk.Button(instance_frame, text="👍 Like", command=self.like_current_instance).grid(row=2, column=0, padx=10)
+        
+        self.instance_verdict = tk.Label(instance_frame, text="Verdict: N/A")
+        self.instance_verdict.grid(row=2,column=1,padx=5,pady=5)
+        
+        tk.Button(instance_frame, text ="👎 Dislike", command=self.dislike_current_instance).grid(row=2,column=2,padx=10)
+        
+        tk.Button(instance_frame, text="⟨ Previous instance", command=self.previous_instance).grid(row=3, column=0, padx=10)
+        tk.Button(instance_frame, text="Next instance ⟩", command=self.next_instance).grid(row=3, column=2, padx=10)
+    
+        tk.Button(root, text = "Save", command=self.save).grid(row=4, column=0, padx=10)
+        tk.Button(root, text="Load", command=self.load).grid(row=4,column=1,padx=0)
 
         # # -------- UI: Image folder input --------
         # tk.Label(root, text="Image Folder:").grid(row=0, column=0, sticky="w", padx=5)
@@ -67,6 +106,8 @@ class ImageReviewerApp:
         self.SLIDING_WINDOW_SIZE = 7
         self.MINIMUM_DISLIKES_FOR_DECIDED = 4 
 
+        # deposit_crt_comboid_state_and_info_lists_intO_vars
+
         self.exp_names_to_csv_paths = {"testexp1":"\\\\data2.thecrick.org\\lab-bentleyk\\home\\users\\mateia\\homogeneous-eight-cell-nine-april-exported-extra-smooth-images\\homogeneous-eight-cell-nine-april-exported-extra-smooth-images.csv", "testexp2":"\\\\data2.thecrick.org\\lab-bentleyk\\home\\users\\mateia\\homogeneous-eight-cell-nine-april-exported-extra-smooth-images\\homogeneous-eight-cell-nine-april-exported-extra-smooth-images.csv"}        
         self.df = None
         self.full_csv_path = None 
@@ -74,6 +115,7 @@ class ImageReviewerApp:
         self.full_yaml_path = None
         self.max_instance_count = None
         self.combo_id_list = None 
+        self.combo_id_to_instance_info_list = None
         self.combo_id_to_instance_state_list = None          
 
         self.current_combo_index = None # index for 'where we're at' in the self.combo_id_list var 
@@ -81,11 +123,14 @@ class ImageReviewerApp:
         # self.current_combo_decided # boolean that specifies whether the criterion has been met for the current combo id having been decided upon. also gets calculated anew each time a combo id is loaded 
         # upon further reflection perhaps this shouldn't be an object variable 
 
+        self.current_instance_info_list = None
+        self.current_instance_verdict_list = None 
+
         # Internal state
         self.folder_path = None
         self.identifier_dict = {}
         self.verdict_list = []
-        self.image_labels = []
+        self.image_label = None 
         self.target_ids = []
         self.current_index = None
         self.verdict_file = ""
@@ -105,42 +150,61 @@ class ImageReviewerApp:
 
     # ------------------- Core logic -------------------
 
-    def get_current_combid_statelist(self):
-        tmp_c_id = self.combo_id_list[self.current_combo_index]
+    def change_combo_id_by(self,d):
+        n_ids = len(self.combo_id_list)
+        self.current_combo_index = ( self.current_combo_index + d ) % n_ids
+        self.load_current_combo_id()
 
-        tmp_crt_combo_id_states = self.combo_id_to_instance_state_list[tmp_c_id]
+    def next_combo_id(self):
+        self.change_combo_id_by(1)
 
-        return (tmp_c_id,tmp_crt_combo_id_states)
+    def previous_combo_id(self):
+        self.change_combo_id_by(-1)
 
+    def change_instance_by(self, d):
+        n_insts = len(self.current_instance_verdict_list)
 
-    def find_undecided_instance_index_in_current_state_list(self, st_idx):    
-        tmp_c_id, tmp_crt_combo_id_states = self.get_current_combid_statelist()
+        self.current_instance_index = ( self.current_instance_index + d ) % n_insts
 
-        inst_n = len(tmp_crt_combo_id_states)
+        self.show_image_for_cid_and_instid(self.get_current_combid(), self.current_instance_index)
+
+    def next_instance(self):
+        self.change_instance_by(1)
+
+    def previous_instance(self):
+        self.change_instance_by(-1)
+        
+    def get_current_combid(self):
+        return self.combo_id_list[self.current_combo_index]
+
+    def deposit_crt_comboid_state_and_info_lists_into_vars(self):
+        c_id = self.get_current_combid()
+
+        self.current_instance_info_list = self.combo_id_to_instance_info_list[c_id]
+        self.current_instance_verdict_list = self.combo_id_to_instance_state_list[c_id]
+    
+    def find_undecided_instance_index_in_current_state_list(self, st_idx):          
+        inst_n = len(self.current_instance_verdict_list)
 
         try: 
-            und_idx = next( idx for idx in range(st_idx, inst_n) if tmp_crt_combo_id_states[idx] == -1 )
+            und_idx = next( idx for idx in range(st_idx, inst_n) if self.current_instance_verdict_list[idx] == -1 )
         except:
             und_idx = inst_n - 1
 
         return und_idx
-
-    def show_current_index(self):
-        tmp_c_id, tmp_crt_combo_id_states = self.get_current_combid_statelist()
-        self.current_shown_combo_index = tmp_c_id
 
     def load_current_combo_id(self):
                 
         if self.current_combo_index != None:
             self.crt_combo_index_label.config(text=f"Combo index: {self.current_combo_index}")
 
-        tmp_c_id, tmp_crt_combo_id_states = self.get_current_combid_statelist()
+        self.deposit_crt_comboid_state_and_info_lists_into_vars()
 
-        #inst_n = len(tmp_crt_combo_id_states)
-
+        c_id = self.get_current_combid()
+                    
         self.current_instance_index = self.find_undecided_instance_index_in_current_state_list(0)
 
-        self.show_image_for_cid_and_instid(tmp_c_id, self.current_instance_index)
+        self.show_image_for_cid_and_instid(c_id, self.current_instance_index)
 
 
 
@@ -149,29 +213,43 @@ class ImageReviewerApp:
         # may end up relying on these variables in the wrong way, and, having constant access to them 
         # from whichever method, I might end up introducing ways to change said variables that are logically inconsistent 
 
-    def show_image_for_cid_and_instid(self):   
-        # img = Image.open(img_path)
-        # img.thumbnail((150, 150))
-        # tk_img = ImageTk.PhotoImage(img)
-        # lbl = tk.Label(self.image_frame, image=tk_img)
-        # lbl.image = tk_img
-        # lbl.grid(row=idx // 5, column=idx % 5, padx=5, pady=5)
-        # self.image_labels.append(lbl)
-        pass
+    def img_file_name_to_img_path(self, img_name):
+
+        sub_dir_name = img_name[:img_name.find('-')] 
+
+        return self.img_dir_path + "\\" + sub_dir_name + "\\" + img_name 
+
+    def show_image_for_cid_and_instid(self, c_id, inst_id):  
+        if self.image_label != None:         
+            self.image_label.destroy()
+            self.image_label = None 
+        
+        img_name = self.combo_id_to_instance_info_list[c_id][inst_id][0]
+        img_path = self.img_file_name_to_img_path(img_name)
+
+        try:
+            img = Image.open(img_path)
+            img.thumbnail((400, 400))
+            tk_img = ImageTk.PhotoImage(img)
+            lbl = tk.Label(self.image_frame, image=tk_img)
+            lbl.image = tk_img
+            lbl.grid(row=0, column=0, padx=5, pady=5)
+            self.image_label = lbl
+        except Exception as e:
+            lbl = tk.Label(self.image_frame, text = "Failed to load image at path: " + img_path )
+            lbl.grid(row=0,column=0,sticky="w", padx=5)                    
 
     # propune-ti, dar nu forta <3 
 
     # doing the right thing at the right time gives you the right to live <3 
 
-    def detect_crt_combo_id_decision_state(self):
-        tmp_c_id, tmp_crt_combo_id_states = self.get_current_combid_statelist()
-
-        inst_n = len(tmp_crt_combo_id_states)
+    def detect_crt_combo_id_decision_state(self):    
+        inst_n = len(self.current_instance_verdict_list)
 
         current_combo_decided = False 
 
         for window_starting_idx in range(inst_n - self.SLIDING_WINDOW_SIZE + 1):
-            tmp_sublist = tmp_crt_combo_id_states[window_starting_idx : (window_starting_idx + self.SLIDING_WINDOW_SIZE) ]
+            tmp_sublist = self.current_instance_verdict_list[window_starting_idx : (window_starting_idx + self.SLIDING_WINDOW_SIZE) ]
 
             dislikes_count = 0 
             for inst_state in tmp_sublist:
@@ -185,11 +263,8 @@ class ImageReviewerApp:
         return current_combo_decided
 
 
-
     def set_current_instance_state_to_value(self, in_val):
-        tmp_c_id, tmp_crt_combo_id_states = self.get_current_combid_statelist()
-
-        tmp_crt_combo_id_states[self.current_instance_index] = in_val 
+        self.current_instance_verdict_list[self.current_instance_index] = in_val 
 
     def like_current_instance(self):
         self.set_current_instance_state_to_value(1)
@@ -245,9 +320,23 @@ class ImageReviewerApp:
         # just to get, before I even start on the dict, what the maximum number of instances for any one 
         # combo-id 
 
+    def save(self):
+        with open(self.full_yaml_path) as stream:
+            try:
+                yaml.safe_dump(save_list,stream)
+
+                save_list = [self.max_instance_count, self.combo_id_list, self.combo_id_to_instance_info_list , self.combo_id_to_instance_state_list ]                                 
+            except yaml.YAMLError as exc:
+                print(exc)
+
 
     def convert_yaml_to_objects(self):
-        pass
+        with open(self.full_yaml_path) as stream:
+            try:
+                save_list = [self.max_instance_count, self.combo_id_list, self.combo_id_to_instance_info_list , self.combo_id_to_instance_state_list ] 
+                yaml.safe_dump(save_list,stream)                
+            except yaml.YAMLError as exc:
+                print(exc)
 
     def get_experiment(self):
         self.full_csv_path = self.exp_names_to_csv_paths[self.experiment_name.get()]
@@ -256,10 +345,11 @@ class ImageReviewerApp:
         
         self.full_yaml_path = self.full_csv_path[:self.full_csv_path.rfind('.')] + ".yaml" 
 
-        if os.path.exists(self.full_yaml_path):
-            self.convert_yaml_to_objects()
-        else:
-            self.convert_df_to_objects()
+        #if os.path.exists(self.full_yaml_path):
+        #    self.convert_yaml_to_objects()
+        #else:
+        
+        self.convert_df_to_objects()
         
         self.current_combo_index = 0
 
