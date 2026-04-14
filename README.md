@@ -1,2 +1,2 @@
-# thresholderfinder
+# thresholdfinder
 I finda da threshold
