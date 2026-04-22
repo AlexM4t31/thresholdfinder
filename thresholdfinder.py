@@ -25,17 +25,10 @@ class ImageReviewerApp:
         ttk.Combobox(root, textvariable=self.experiment_name, values=["testexp1", "testexp2"], width=30).grid(row=0, column=1, padx=5, pady=5, sticky="ew")
         tk.Button(root, text="Go", command=self.get_experiment).grid(row=0, column=2, padx=5, pady=5)
 
-        # I've got an idea for how to incorporate the 
-        # current combo id label more fluidly from a visual standpoint.
-        
-        # self.crt_combo_index_label = tk.Label(root, text="Combo index: N/A")
-        # self.crt_combo_index_label.grid(row=1, column=0, sticky="w", padx=5)
-
         # first the frame for the combo id nav stuff. 
 
         self.combo_main_frame = tk.Frame(root)
-#        self.combo_main_frame.grid(row=2, column=0, columnspan=10, padx=5, pady=5)
-
+        
         tk.Button(self.combo_main_frame, text="⟨ Previous ID", command=self.previous_combo_id).grid(row=0, column=0, padx=10)
     
         self.crt_combo_index_label = tk.Label(self.combo_main_frame, text="Combo index: N/A")
@@ -80,58 +73,23 @@ class ImageReviewerApp:
         #self.instance_label = tk.Label(instance_frame, text = "Instance index: N/A")
         #self.instance_label.grid(row=1,column=0,columnspan=3,padx=5,pady=5)
 
-        tk.Button(self.instance_frame, text="👍 Like", command=self.like_current_instance).grid(row=2, column=0, padx=10)
+        tk.Button(self.instance_frame, text="👍 Normal", command=self.like_current_instance).grid(row=2, column=0, padx=10)
         
         self.instance_verdict_label = tk.Label(self.instance_frame, text="Verdict: N/A")
         self.instance_verdict_label.grid(row=2,column=1,padx=5,pady=5)
         
-        tk.Button(self.instance_frame, text ="👎 Dislike", command=self.dislike_current_instance).grid(row=2,column=2,padx=10)
+        tk.Button(self.instance_frame, text ="👎 Leak", command=self.dislike_current_instance).grid(row=2,column=2,padx=10)
         
         self.hide_selected_experiment_frames()
-
-        # # -------- UI: Image folder input --------
-        # tk.Label(root, text="Image Folder:").grid(row=0, column=0, sticky="w", padx=5)
-        # self.path_var = tk.StringVar()
-        # tk.Entry(root, textvariable=self.path_var, width=60).grid(row=0, column=1, padx=5, pady=5, sticky="ew")
-        # tk.Button(root, text="Browse", command=self.browse_folder).grid(row=0, column=2, padx=5, pady=5)
-
-        # # -------- UI: ID text file input --------
-        # tk.Label(root, text="ID List File:").grid(row=1, column=0, sticky="w", padx=5)
-        # self.idfile_var = tk.StringVar()
-        # tk.Entry(root, textvariable=self.idfile_var, width=60).grid(row=1, column=1, padx=5, pady=5, sticky="ew")
-        # tk.Button(root, text="Browse", command=self.browse_id_file).grid(row=1, column=2, padx=5, pady=5)
-
-        # # -------- Load button --------
-        # tk.Button(root, text="Load Images", command=self.load_images).grid(row=2, column=0, columnspan=3, pady=10)
-
-        # # -------- Labels --------
-        # self.current_id_label = tk.Label(root, text="Current ID: N/A", font=("Arial", 12, "bold"))
-        # self.current_id_label.grid(row=3, column=0, columnspan=3, pady=(0, 10))
-
-        # self.verdict_label = tk.Label(root, text="Verdict: N/A", font=("Arial", 10))
-        # self.verdict_label.grid(row=4, column=0, columnspan=3)
-
-        # # -------- Navigation + like/dislike --------
-        # nav_frame = tk.Frame(root)
-        # nav_frame.grid(row=5, column=0, columnspan=3, pady=10)
-
-        # tk.Button(nav_frame, text="⟨ Previous ID", command=self.previous_id).grid(row=0, column=0, padx=10)
-        # tk.Button(nav_frame, text="👍 Like", command=lambda: self.set_verdict(1)).grid(row=0, column=1, padx=10)
-        # tk.Button(nav_frame, text="👎 Dislike", command=lambda: self.set_verdict(0)).grid(row=0, column=2, padx=10)
-        # tk.Button(nav_frame, text="Next ID ⟩", command=self.next_id).grid(row=0, column=3, padx=10)
-
-        # # -------- Image display area --------
-        # self.image_frame = tk.Frame(root)
-        # self.image_frame.grid(row=6, column=0, columnspan=3, padx=5, pady=5)
 
         self.SLIDING_WINDOW_SIZE = 7
         self.MINIMUM_DISLIKES_FOR_DECIDED = 4 
 
-        # deposit_crt_comboid_state_and_info_lists_intO_vars
+        self.image_label = None         
 
-        self.experiment_loading_started = False 
+        self.instance_data_loaded = False 
 
-        self.exp_names_to_csv_paths = {"testexp1":"\\\\data2.thecrick.org\\lab-bentleyk\\home\\users\\mateia\\homogeneous-eight-cell-nine-april-exported-extra-smooth-images\\homogeneous-eight-cell-nine-april-exported-extra-smooth-images.csv", "testexp2":"\\\\data2.thecrick.org\\lab-bentleyk\\home\\users\\mateia\\homogeneous-eight-cell-nine-april-exported-extra-smooth-images\\homogeneous-eight-cell-nine-april-exported-extra-smooth-images.csv"}        
+        self.exp_names_to_csv_paths = {"testexp1":"\\\\data2.thecrick.org\\lab-bentleyk\\home\\users\\mateia\\homogeneous-eight-cell-nine-april-exported-extra-smooth-images\\homogeneous-eight-cell-nine-april-exported-extra-smooth-images-df.csv", "testexp2":"\\\\data2.thecrick.org\\lab-bentleyk\\home\\users\\mateia\\homogeneous-eight-cell-nine-april-exported-extra-smooth-images\\homogeneous-eight-cell-nine-april-exported-extra-smooth-images-df.csv"}        
         self.df = None
         self.full_csv_path = None 
         self.img_dir_path = None 
@@ -141,31 +99,14 @@ class ImageReviewerApp:
         self.combo_id_to_instance_state_list = None      
         self.combo_id_to_last_seen_index = None 
 
-        self.fordebuggingverdictlist = None     
-
         self.current_combo_index = None # index for 'where we're at' in the self.combo_id_list var 
         self.current_instance_index = None # index for 'where we're at' in the instance list for the current combo id. gets calculated each time a switch to a new combo id takes place, i.e, is not stored
-        # self.current_combo_decided # boolean that specifies whether the criterion has been met for the current combo id having been decided upon. also gets calculated anew each time a combo id is loaded 
-        # upon further reflection perhaps this shouldn't be an object variable 
 
         self.current_instance_info_list = None
         self.current_instance_verdict_list = None 
 
-        # Internal state
-        self.folder_path = None
-        self.identifier_dict = {}
-        self.verdict_list = []
-        self.image_label = None 
-        self.target_ids = []
-        self.current_index = None
-        self.verdict_file = ""
-        self.max_identifier_found = 0
-
         root.protocol("WM_DELETE_WINDOW", self.on_close)
 
-
-
-    # ------------------- UI -------------------
     def browse_folder(self):
         folder = filedialog.askdirectory()
         if folder:
@@ -185,9 +126,7 @@ class ImageReviewerApp:
         self.combo_main_frame.grid(row=2, column=0, columnspan=10, padx=5, pady=5)
         self.instance_frame.grid(row=3, column=0, columnspan=3, padx=5, pady=5)
         self.instance_index_frame.grid(row=1,column=0, columnspan=7, padx=5, pady=5)
-
-    # ------------------- Core logic -------------------
-
+ 
     def change_combo_id_by(self,d):
         # but first, let me update the main dict 
         # c_id = self.get_current_combid()
@@ -200,11 +139,11 @@ class ImageReviewerApp:
         self.load_current_combo_id()
 
     def next_combo_id(self):
-        if self.experiment_loading_started:
+        if self.instance_data_loaded:
             self.change_combo_id_by(1)
 
     def previous_combo_id(self):
-        if self.experiment_loading_started:
+        if self.instance_data_loaded:
             self.change_combo_id_by(-1)
 
     def change_instance_by(self, d):
@@ -212,20 +151,20 @@ class ImageReviewerApp:
 
         self.current_instance_index = ( self.current_instance_index + d ) % n_insts
 
+        self.update_last_seen_instance()
+
         self.load_current_instance()
 
     def update_last_seen_instance(self):
         self.combo_id_to_last_seen_index[self.get_current_combid()] = self.current_instance_index
 
     def next_instance(self):
-        if self.experiment_loading_started:
-            self.change_instance_by(1)
-            self.update_last_seen_instance()
+        if self.instance_data_loaded:
+            self.change_instance_by(1)            
 
     def previous_instance(self):
-        if self.experiment_loading_started:
+        if self.instance_data_loaded:
             self.change_instance_by(-1)
-            self.update_last_seen_instance()
         
     def get_current_combid(self):
         return self.combo_id_list[self.current_combo_index]
@@ -236,7 +175,7 @@ class ImageReviewerApp:
         self.current_instance_info_list = self.combo_id_to_instance_info_list[c_id]
         self.current_instance_verdict_list = self.combo_id_to_instance_state_list[c_id]
     
-    def update_instance_labels(self):
+    def update_instance_labels(self): # checked 
         idx_labels = self.indices_labels
 
         crt_inst_idx = self.current_instance_index
@@ -247,7 +186,7 @@ class ImageReviewerApp:
 
             idx_labels[tmp_lbl_idx].config(text=str(tmp_inst_idx))            
 
-    def update_verdict_label(self):        
+    def update_instance_verdict_label(self):        
 
         if self.current_instance_verdict_list[self.current_instance_index] == 0:
             v = "Leak"
@@ -261,51 +200,51 @@ class ImageReviewerApp:
 
         self.instance_verdict_label.config(text="Verdict: " + v)
 
-
-    def load_current_instance(self):
+    def load_current_instance(self): # if combo id and instance id are taken care of ( and they are, see Notion table ), this is fine, too 
         
         self.update_instance_labels()
 
-        self.update_verdict_label()
+        self.update_instance_verdict_label()
 
         self.show_image_for_cid_and_instid(self.get_current_combid(), self.current_instance_index)
-
 
     def load_current_combo_id(self): # checked              
 
         if self.current_combo_index != None:
-            self.crt_combo_index_label.config(text=f"Combo index: {self.current_combo_index}")
+            self.crt_combo_index_label.config(text=f"Combo index: {self.current_combo_index}") # fair  
 
-            self.deposit_crt_comboid_state_and_info_lists_into_vars()
+            self.deposit_crt_comboid_state_and_info_lists_into_vars() # so far so good 
             
-            self.detect_crt_decision_state_and_show()
+            self.detect_crt_decision_state_and_show() # decision establishing has all been thoroughly checked ( see Notion table )
 
-            c_id = self.get_current_combid()
+            c_id = self.get_current_combid() # this is ofc all good 
 
-            self.current_instance_index = self.combo_id_to_last_seen_index[c_id]
+            self.current_instance_index = self.combo_id_to_last_seen_index[c_id] # this should be fine 
 
-            self.load_current_instance()
+            self.load_current_instance() # all good 
 
         # here will be a bit of code that gets the current decision value and shows it in a label
         # the idea would be to stop keeping random things in the object state because I think I
         # may end up relying on these variables in the wrong way, and, having constant access to them 
         # from whichever method, I might end up introducing ways to change said variables that are logically inconsistent 
 
-    def img_file_name_to_img_path(self, img_name):
+    #def img_file_name_to_img_path(self, img_name):
+    #    sub_dir_name = img_name[:img_name.find('-')] 
+    #    return self.img_dir_path + "\\" + sub_dir_name + "\\" + img_name 
 
-        sub_dir_name = img_name[:img_name.find('-')] 
-
-        return self.img_dir_path + "\\" + sub_dir_name + "\\" + img_name 
-
-    def show_image_for_cid_and_instid(self, c_id, inst_id):  
+    def show_image_for_cid_and_instid(self, c_id, inst_id): # checked 
         if self.image_label != None:         
             self.image_label.destroy()
             self.image_label = None 
-        
-        img_name = self.combo_id_to_instance_info_list[c_id][inst_id][0]
-        img_path = self.img_file_name_to_img_path(img_name)
+        # the above, all good 
 
-        try:
+        img_name = self.combo_id_to_instance_info_list[c_id][inst_id][0]
+        # all good 
+
+        img_path = self.img_dir_path + "\\" + img_name
+        # all good 
+
+        try: # the try block is all good 
             img = Image.open(img_path)
             img.thumbnail((400, 400))
             tk_img = ImageTk.PhotoImage(img)
@@ -313,13 +252,10 @@ class ImageReviewerApp:
             lbl.image = tk_img
             lbl.grid(row=0, column=0, padx=5, pady=5)
             self.image_label = lbl
-        except Exception as e:
+        except Exception as e: # the exception block is all good 
             lbl = tk.Label(self.image_frame, text = "Failed to load image at path: " + img_path )
-            lbl.grid(row=0,column=0,sticky="w", padx=5)                    
-
-    # propune-ti, dar nu forta <3 
-
-    # doing the right thing at the right time gives you the right to live <3 
+            lbl.grid(row=0,column=0,sticky="w", padx=5)  
+            self.image_label = lbl # added this later, I'd ommitted it and the no. of stored labels increased by one on each method run 
 
     def detect_crt_decision_state_and_show(self):
         crt_dec_state = self.detect_crt_combo_id_decision_state()
@@ -351,72 +287,54 @@ class ImageReviewerApp:
 
         return current_combo_decided
 
-
-    def set_current_instance_state_to_value(self, in_val):
+    def set_current_instance_state_to_value_and_refresh_decision(self, in_val):
         self.current_instance_verdict_list[self.current_instance_index] = in_val 
-
+        self.detect_crt_decision_state_and_show()
+        self.update_instance_verdict_label()
+        
     def like_current_instance(self):
-        if self.experiment_loading_started:
-            self.set_current_instance_state_to_value(1)
-            self.detect_crt_decision_state_and_show()
-            self.load_current_instance()
-
-        # but we both know that liking is not the only thing that needs to happen
-        # we need to be reevaluating the state list, also 
-        # and honestly idgaf whether or not it's computationally efficient
-
+        if self.instance_data_loaded:
+            self.set_current_instance_state_to_value_and_refresh_decision(1)            
 
     def dislike_current_instance(self):
-        if self.experiment_loading_started:
-            self.set_current_instance_state_to_value(0)
-            self.detect_crt_decision_state_and_show()
-            self.load_current_instance()
-    
-    def convert_df_to_objects(self):
-        self.df = pd.read_csv(self.full_csv_path)
+        if self.instance_data_loaded:
+            self.set_current_instance_state_to_value_and_refresh_decision(0)
+            
+    def convert_df_to_objects(self): # assuming a certain .csv(/df respectively) structure, this is correctly implemented.
+        # it's not flexible by any means, but if your csv contains combo-id, filename, stripe-thresh=cov-zero columns, this works
+        # it also does not really account for whatever special/ wrong things could happen with values in these columns
+        # but I'll worry about that shortly. meaning now. 
 
-        # straight forward enough, but what do we really need the max_instance_count for?
         self.combo_id_list = []
-
-        combo_id_groups = [ x for _, x in self.df.groupby(["combo-id"]) ]
-        for combo_id_subdf in combo_id_groups:
-            tmp_combo_id = int(combo_id_subdf.iloc[0]["combo-id"])
-            self.combo_id_list.append(tmp_combo_id)
-
-            tmp_count = len(combo_id_subdf)
-
-        self.combo_id_list.sort()
-        
         self.combo_id_to_instance_info_list = dict()
         self.combo_id_to_instance_state_list = dict()
         self.combo_id_to_last_seen_index = dict()        
-        
+
+        self.df = pd.read_csv(self.full_csv_path)
+        combo_id_groups = [ x for _, x in self.df.groupby(["combo-id"]) ]
+
         for combo_id_subdf in combo_id_groups:
-            tmp_combo_id = int(combo_id_subdf.iloc[0]["combo-id"])
+            tmp_combo_id = int(combo_id_subdf.iloc[0]["combo-id"]) # ok
             
-            sorted_subdf = combo_id_subdf.sort_values(["stripe-thresh-cov-zero"])
+            self.combo_id_list.append(tmp_combo_id) # sure 
 
-            tmp_sorted_instance_list = sorted_subdf[["file-name", "stripe-thresh-cov-zero"]].values.tolist()
+            sorted_subdf = combo_id_subdf.sort_values(["stripe-thresh-cov-zero"]) # great 
 
-            self.combo_id_to_instance_info_list[tmp_combo_id] = tmp_sorted_instance_list
+            tmp_sorted_instance_list = sorted_subdf[["file-name", "stripe-thresh-cov-zero"]].values.tolist() # this has been checked previously 
 
-            self.combo_id_to_instance_state_list[tmp_combo_id] = [-1 for _ in range(len(self.combo_id_to_instance_info_list[tmp_combo_id]))] 
+            self.combo_id_to_instance_info_list[tmp_combo_id] = tmp_sorted_instance_list # all good 
 
-            self.combo_id_to_last_seen_index[tmp_combo_id] = 0
+            self.combo_id_to_instance_state_list[tmp_combo_id] = [-1 for _ in range(len(tmp_sorted_instance_list))] # makes sense
 
-        # ok, the first thing I'm interested in: list of combo-ids,
-        # and then a dict linking each combo id to a list of digits representing the state of each instance
-        # -2 = skipped, -1 undecided, 0 disliked, 1 liked
-        # and yeah I'd rather have -2 as skipped, allowing me to have all instance state lists the same ( maximal ) length
+            self.combo_id_to_last_seen_index[tmp_combo_id] = 0 # makes sense 
+
+        self.combo_id_list.sort() # all good 
+
+        self.instance_data_loaded = True
  
-        # but that does mean that I basically have to do a semi-redundant groupby combo-id followed by a count
-        # just to get, before I even start on the dict, what the maximum number of instances for any one 
-        # combo-id 
-
     def save_to_yaml_file(self):
-        # print("self.full_yaml_path: " + str(self.full_yaml_path))
 
-        with io.open(self.full_yaml_path, "w", encoding="utf8") as outfile:
+        with io.open(self.full_yaml_path, "w", encoding="utf8") as outfile: # io.open with "w" overwrites/rewrites the file if it already exists. 
             try:
                 save_list = [self.combo_id_list, self.combo_id_to_instance_info_list , self.combo_id_to_instance_state_list, self.combo_id_to_last_seen_index ]                                 
 
@@ -434,31 +352,32 @@ class ImageReviewerApp:
                 self.combo_id_to_instance_state_list = loaded_list[2]
                 self.combo_id_to_last_seen_index = loaded_list[3]
             
+                self.instance_data_loaded = True 
+
             except yaml.YAMLError as exc:
                 print(exc)
 
     def get_experiment(self):
-        exp_name_label_contents = self.experiment_name.get()
+        exp_name_label_contents = self.experiment_name.get() # solid 
 
-        if ( exp_name_label_contents != None) and (len(exp_name_label_contents) > 0):
-            self.experiment_loading_started = True 
-
-            self.full_csv_path = self.exp_names_to_csv_paths[exp_name_label_contents]
+        if ( exp_name_label_contents != None) and (len(exp_name_label_contents) > 0): # makes sense 
             
-            self.img_dir_path = self.full_csv_path[:self.full_csv_path.rfind('\\')]
+            self.full_csv_path = self.exp_names_to_csv_paths[exp_name_label_contents] # all good 
             
-            self.full_yaml_path = self.full_csv_path[:self.full_csv_path.rfind('.')] + ".yaml" 
+            self.img_dir_path = self.full_csv_path[:self.full_csv_path.rfind('\\')] # all good 
+            
+            self.full_yaml_path = self.full_csv_path[:self.full_csv_path.rfind('.')] + ".yaml" # all good  
 
             if os.path.exists(self.full_yaml_path):
                 self.load_from_yaml_file()
             else:
                 self.convert_df_to_objects()
             
-            self.current_combo_index = 0
+            self.current_combo_index = 0 # solid 
 
-            self.show_selected_experiment_frames()
+            self.show_selected_experiment_frames() # all good 
 
-            self.load_current_combo_id()
+            self.load_current_combo_id() # all good, this one I know for sure I've checked well enough. 
             
 
         # cool, at this point either the yaml will have been loaded, or the df will have been loaded,
@@ -474,142 +393,6 @@ class ImageReviewerApp:
         # that totally fucks up what we were trying to do with the skipped instances
         # because there's no notion of skip that makes sense anymore, at least not easily 
 
-        
-
-    def load_images(self):
-        self.folder_path = self.path_var.get().strip()
-        idfile_path = self.idfile_var.get().strip()
-
-        if not os.path.isdir(self.folder_path):
-            messagebox.showerror("Error", "Invalid image directory.")
-            return
-        if not os.path.isfile(idfile_path):
-            messagebox.showerror("Error", "Invalid ID list file.")
-            return
-
-        # Read target IDs from text file
-        try:
-            with open(idfile_path, "r") as f:
-                self.target_ids = [int(line.strip()) for line in f if line.strip().isdigit()]
-        except Exception as e:
-            messagebox.showerror("Error", f"Failed to read ID list file:\n{e}")
-            return
-
-        if not self.target_ids:
-            messagebox.showerror("Error", "No valid IDs found in the text file.")
-            return
-
-        # Collect all valid PNGs
-        pattern = re.compile(r"^(\d+)-\d+\.png$")
-        self.identifier_dict.clear()
-        all_files = [f for f in os.listdir(self.folder_path) if f.lower().endswith(".png")]
-        identifiers_found = set()
-
-        for filename in all_files:
-            match = pattern.match(filename)
-            if match:
-                identifier = int(match.group(1))
-                identifiers_found.add(identifier)
-                self.identifier_dict.setdefault(identifier, []).append(os.path.join(self.folder_path, filename))
-
-        if not identifiers_found:
-            messagebox.showerror("Error", "No valid filenames found in folder.")
-            return
-
-        self.max_identifier_found = max(identifiers_found)
-        self.verdict_list = [-2] * (self.max_identifier_found + 1)
-        for i in self.target_ids:
-            if i in identifiers_found:
-                self.verdict_list[i] = -1  # unreviewed
-
-        self.set_verdicts_file_path()
-
-        self.load_verdicts()
-
-        first_valid_index = next((idx for idx, i in enumerate(self.target_ids) if i in identifiers_found), None)
-        if first_valid_index is not None:
-            self.current_index = first_valid_index
-            self.display_current_id()
-        else:
-            messagebox.showinfo("Info", "None of the target IDs were found in the folder.")
-
-    # ------------------- Display -------------------
-    def display_current_id(self):
-        if self.current_index is None:
-            return
-        current_id = self.target_ids[self.current_index]
-        self.current_id_label.config(text=f"Current ID: {current_id}")
-        verdict = self.verdict_list[current_id]
-        verdict_text = {1: "Liked 👍", 0: "Disliked 👎", -1: "Not reviewed", -2: "Missing"}[verdict]
-        self.verdict_label.config(text=f"Verdict: {verdict_text}")
-        self.display_images(current_id)
-
-    def display_images(self, identifier):
-        for label in self.image_labels:
-            label.destroy()
-        self.image_labels.clear()
-
-        image_paths = self.identifier_dict.get(identifier, [])
-        if not image_paths:
-            messagebox.showinfo("Info", f"No images found for identifier {identifier}")
-            return
-
-        sample_paths = random.sample(image_paths, min(10, len(image_paths)))
-        for idx, img_path in enumerate(sample_paths):
-            try:
-                img = Image.open(img_path)
-                img.thumbnail((150, 150))
-                tk_img = ImageTk.PhotoImage(img)
-                lbl = tk.Label(self.image_frame, image=tk_img)
-                lbl.image = tk_img
-                lbl.grid(row=idx // 5, column=idx % 5, padx=5, pady=5)
-                self.image_labels.append(lbl)
-            except Exception as e:
-                print(f"Failed to load {img_path}: {e}")
-
-    # ------------------- Verdict handling -------------------
-
-    def set_verdicts_file_path(self):
-        if self.folder_path != None and len(self.folder_path) > 0: 
-            verdictFileSuffix = ( self.folder_path[self.folder_path.rfind('/') + 1:])
-            self.verdict_file = verdictFileSuffix + "-verdicts.txt"
-
-    def set_verdict(self, value):
-        if self.current_index is None:
-            return
-        current_id = self.target_ids[self.current_index]
-        self.verdict_list[current_id] = value
-        self.save_verdicts()
-        self.display_current_id()
-
-    def load_verdicts(self):
-        """Load the verdict file, whose name is generated based on the image folder name (only verdicts, one per line)."""
-            
-        if not os.path.exists(self.verdict_file):
-            return
-        try:
-            with open(self.verdict_file, "r") as f:
-                lines = [line.strip() for line in f if line.strip()]
-            for i, val in enumerate(lines):
-                if val in {"-2", "-1", "0", "1"} and i < len(self.verdict_list):
-                    self.verdict_list[i] = int(val)
-        except Exception as e:
-            print(f"Failed to load verdicts: {e}")
-
-
-    # "am prea multa treaba sa ma gandesc la asta - dar n-am zis cu vreo urma de resentiment"
-
-    def save_verdicts(self):
-        """Auto-save verdicts as plain values, one per line."""
-        
-        try:
-            with open(self.verdict_file, "w") as f:
-                for val in self.verdict_list:
-                    f.write(f"{val}\n")
-        except Exception as e:
-            print(f"Failed to save verdicts: {e}")
-
-    # ------------------- Navigation -------------------
 
     def on_close(self):
         if self.full_yaml_path != None:

@@ -122,4 +122,9 @@ finDf = cellSpacingSubDfs[2]
 
 finDf = finDf[["combo-id", "inst-id", "file-name", "stripe-thresh-cov-zero"]]
 
+def addSubDirToFileName(fn):
+    return fn[:fn.find('-')] + "\\" + fn 
+
+finDf['file-name'] = finDf['file-name'].apply(addSubDirToFileName)
+
 finDf.to_csv("homogeneous-eight-cell-nine-april-exported-extra-smooth-images-df.csv")
