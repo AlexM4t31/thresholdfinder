@@ -82,8 +82,7 @@ class ImageReviewerApp:
         
         self.hide_selected_experiment_frames()
 
-        self.SLIDING_WINDOW_SIZE = 7
-        self.MINIMUM_DISLIKES_FOR_DECIDED = 4 
+        self.MINIMUM_DISLIKES_FOR_DECIDED = 15 
 
         self.image_label = None         
 
@@ -268,35 +267,29 @@ class ImageReviewerApp:
             self.combo_verdict_label.config(bg="gray")
 
 
-    def detect_crt_combo_id_decision_state(self): # checked  
+    def detect_crt_combo_id_decision_state(self):
+
         inst_n = len(self.current_instance_verdict_list)
+    
+        tmp_thresh_sum = 0            
+    
+        dislikes_count = 0 
 
-        current_combo_decided = False 
+        current_combo_decided = False
 
-        for window_starting_idx in range(inst_n - self.SLIDING_WINDOW_SIZE + 1): # range is correct 
-            tmp_sublist = self.current_instance_verdict_list[window_starting_idx : (window_starting_idx + self.SLIDING_WINDOW_SIZE) ] # correct sub-selection
+        for i in range(inst_n):
+            if self.current_instance_verdict_list[i] == 0:
+                tmp_thresh_sum += self.current_instance_info_list[i][1]
+                dislikes_count += 1
 
-            tmp_thresh_sum = 0
-            tmp_thresh_count = 0 
+        tmp_avg = 0 
 
-            dislikes_count = 0 
+        if dislikes_count >= self.MINIMUM_DISLIKES_FOR_DECIDED: 
+            current_combo_decided = True                 
+            tmp_avg = tmp_thresh_sum / dislikes_count
+
+        print("thresh/metric avg: " + str(tmp_avg))
             
-            for i in range(len(tmp_sublist)):
-                if tmp_sublist[i] == 0:
-                    dislikes_count += 1
-                    
-                    tmp_thresh_sum += self.current_instance_info_list[window_starting_idx + i][1]
-                    tmp_thresh_count += 1
-
-            if dislikes_count >= self.MINIMUM_DISLIKES_FOR_DECIDED:
-                current_combo_decided = True 
-                
-                # a bit of extra code so that the decided threshold is printed out when identified :) 
-                thresh_avg = tmp_thresh_sum / tmp_thresh_count
-                print("thresh_avg: " + str(thresh_avg))
-
-                break  
-
         return current_combo_decided
 
     def set_current_instance_state_to_value_and_refresh_decision(self, in_val):
@@ -330,9 +323,11 @@ class ImageReviewerApp:
             
             self.combo_id_list.append(tmp_combo_id) # sure 
 
-            sorted_subdf = combo_id_subdf.sort_values(["stripe-thresh-cov-zero"]) # great 
+            # sorted_subdf = combo_id_subdf.sort_values(["stripe-thresh-cov-zero"]) # great 
 
-            tmp_sorted_instance_list = sorted_subdf[["file-name", "stripe-thresh-cov-zero"]].values.tolist() # this has been checked previously 
+            randomly_reordered_subdf = combo_id_subdf.sample(frac=1)
+
+            tmp_sorted_instance_list = randomly_reordered_subdf[["file-name", "stripe-thresh-cov-zero"]].values.tolist() # this has been checked previously 
 
             self.combo_id_to_instance_info_list[tmp_combo_id] = tmp_sorted_instance_list # all good 
 
