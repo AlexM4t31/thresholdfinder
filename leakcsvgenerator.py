@@ -123,7 +123,7 @@ finDf = cellSpacingSubDfs[2]
 finDf = finDf[["combo-id", "inst-id", "file-name", "stripe-thresh-cov-zero"]]
 
 def addSubDirToFileName(fn):
-    return fn[:fn.find('-')] + "\\" + fn 
+    return fn[:fn.find('-')] + "/" + fn 
 
 finDf['file-name'] = finDf['file-name'].apply(addSubDirToFileName)
 

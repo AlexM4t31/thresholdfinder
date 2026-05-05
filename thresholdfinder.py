@@ -276,13 +276,25 @@ class ImageReviewerApp:
         for window_starting_idx in range(inst_n - self.SLIDING_WINDOW_SIZE + 1): # range is correct 
             tmp_sublist = self.current_instance_verdict_list[window_starting_idx : (window_starting_idx + self.SLIDING_WINDOW_SIZE) ] # correct sub-selection
 
+            tmp_thresh_sum = 0
+            tmp_thresh_count = 0 
+
             dislikes_count = 0 
-            for inst_state in tmp_sublist:
-                if inst_state == 0:
+            
+            for i in range(len(tmp_sublist)):
+                if tmp_sublist[i] == 0:
                     dislikes_count += 1
+                    
+                    tmp_thresh_sum += self.current_instance_info_list[window_starting_idx + i][1]
+                    tmp_thresh_count += 1
 
             if dislikes_count >= self.MINIMUM_DISLIKES_FOR_DECIDED:
                 current_combo_decided = True 
+                
+                # a bit of extra code so that the decided threshold is printed out when identified :) 
+                thresh_avg = tmp_thresh_sum / tmp_thresh_count
+                print("thresh_avg: " + str(thresh_avg))
+
                 break  
 
         return current_combo_decided
