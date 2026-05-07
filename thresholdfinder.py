@@ -28,7 +28,7 @@ class ImageReviewerApp:
         # first the frame for the combo id nav stuff. 
 
         self.combo_main_frame = tk.Frame(root)
-        
+
         tk.Button(self.combo_main_frame, text="⟨ Previous ID", command=self.previous_combo_id).grid(row=0, column=0, padx=10)
     
         self.crt_combo_index_label = tk.Label(self.combo_main_frame, text="Combo index: N/A")
@@ -37,17 +37,29 @@ class ImageReviewerApp:
         tk.Button(self.combo_main_frame, text="Next ID ⟩", command=self.next_combo_id).grid(row=0, column=2, padx=10)
     
         self.combo_verdict_label = tk.Label(self.combo_main_frame, text="Threshold discovered: N/A")
-        self.combo_verdict_label.grid(row = 1, column = 0, columnspan=3)
+        self.combo_verdict_label.grid(row = 1, column = 0, columnspan=3, pady=(10,0))
         self.combo_verdict_label.config(bg="gray")
+
+        self.visTypeFrame = tk.Frame(self.combo_main_frame)
+        self.visTypeFrame.grid(row=2,column=1,pady=(20,0))
+
+        tk.Button(self.visTypeFrame, text="Vis -", command=self.previous_img_style_idx).grid(row=0, column=0)
+        self.visTypeLabel = tk.Label(self.visTypeFrame, text="N/A")
+        self.visTypeLabel.grid(row=0,column=1,pady=0)
+        tk.Button(self.visTypeFrame, text="Vis +", command=self.next_img_style_idx).grid(row=0, column=2)
+        
 
         self.instance_frame = tk.Frame(root)
 #        self.instance_frame.grid(row=3, column=0, columnspan=3, padx=5, pady=5)
-
+        
         self.image_frame = tk.Frame(self.instance_frame)  
-        self.image_frame.grid(row=0, column=0, columnspan=3, padx=5, pady=5)
+        self.image_frame.grid(row=0, column=0, columnspan=3, padx=0, pady=0)    
+
+        myVisName = tk.Label(self.image_frame, text="yeah") 
+        myVisName.grid(row=0,column=0)
 
         self.instance_index_frame = tk.Frame(self.instance_frame)
-        #self.instance_index_frame.grid(row=1,column=0, columnspan=7, padx=5, pady=5)
+        self.instance_index_frame.grid(row=2,column=0, columnspan=7, padx=5, pady=5)
 
         self.two_before_crt_instance_label = tk.Label(self.instance_index_frame, text="N/A")
         self.two_before_crt_instance_label.grid(row=0,column=0)
@@ -88,15 +100,17 @@ class ImageReviewerApp:
 
         self.instance_data_loaded = False 
 
-        self.exp_names_to_csv_paths = {"testexp1":"\\\\data2.thecrick.org\\lab-bentleyk\\home\\users\\mateia\\homogeneous-eight-cell-nine-april-exported-extra-smooth-images\\homogeneous-eight-cell-nine-april-exported-extra-smooth-images-df.csv", "testexp2":"\\\\data2.thecrick.org\\lab-bentleyk\\home\\users\\mateia\\homogeneous-eight-cell-nine-april-exported-extra-smooth-images\\homogeneous-eight-cell-nine-april-exported-extra-smooth-images-df.csv"}        
+        self.exp_names_to_pkl_paths = {"testexp1":"\\\\data2.thecrick.org\\lab-bentleyk\\home\\users\\mateia\\homogeneous-eight-cell-twentynine-april-exported-extra-smooth-images\\homogeneous-eight-cell-twentynine-april-exported-extra-smooth-images-df.pkl", "testexp2":"\\\\data2.thecrick.org\\lab-bentleyk\\home\\users\\mateia\\homogeneous-eight-cell-twentynine-april-exported-extra-smooth-images\\homogeneous-eight-cell-nine-april-exported-extra-smooth-images-df.pkl"}        
         self.df = None
-        self.full_csv_path = None 
+        self.full_pkl_path = None 
         self.img_dir_path = None 
         self.full_yaml_path = None
         self.combo_id_list = None 
         self.combo_id_to_instance_info_list = None
         self.combo_id_to_instance_state_list = None      
         self.combo_id_to_last_seen_index = None 
+        self.image_type_index = None 
+        self.image_type_indices_count = None 
 
         self.current_combo_index = None # index for 'where we're at' in the self.combo_id_list var 
         self.current_instance_index = None # index for 'where we're at' in the instance list for the current combo id. gets calculated each time a switch to a new combo id takes place, i.e, is not stored
@@ -237,19 +251,22 @@ class ImageReviewerApp:
             self.image_label = None 
         # the above, all good 
 
-        img_name = self.combo_id_to_instance_info_list[c_id][inst_id][0]
+        img_name = self.combo_id_to_instance_info_list[c_id][inst_id][0][self.image_type_index]
+        #print("img name: " + img_name)        
+        
         # all good 
 
         img_path = self.img_dir_path + "\\" + img_name
         # all good 
 
         try: # the try block is all good 
+            
             img = Image.open(img_path)
             img.thumbnail((400, 400))
             tk_img = ImageTk.PhotoImage(img)
             lbl = tk.Label(self.image_frame, image=tk_img)
             lbl.image = tk_img
-            lbl.grid(row=0, column=0, padx=5, pady=5)
+            lbl.grid(row=0, column=0, padx=0, pady=0)
             self.image_label = lbl
         except Exception as e: # the exception block is all good 
             lbl = tk.Label(self.image_frame, text = "Failed to load image at path: " + img_path )
@@ -288,7 +305,7 @@ class ImageReviewerApp:
             current_combo_decided = True                 
             tmp_avg = tmp_thresh_sum / dislikes_count
 
-        print("thresh/metric avg: " + str(tmp_avg))
+        #print("thresh/metric avg: " + str(tmp_avg))
             
         return current_combo_decided
 
@@ -305,8 +322,8 @@ class ImageReviewerApp:
         if self.instance_data_loaded:
             self.set_current_instance_state_to_value_and_refresh_decision(0)
             
-    def convert_df_to_objects(self): # assuming a certain .csv(/df respectively) structure, this is correctly implemented.
-        # it's not flexible by any means, but if your csv contains combo-id, filename, stripe-thresh=cov-zero columns, this works
+    def convert_df_to_objects(self): # assuming a certain .pkl(/df respectively) structure, this is correctly implemented.
+        # it's not flexible by any means, but if your pkl contains combo-id, filename, stripe-thresh=cov-zero columns, this works
         # it also does not really account for whatever special/ wrong things could happen with values in these columns
         # but I'll worry about that shortly. meaning now. 
 
@@ -314,8 +331,9 @@ class ImageReviewerApp:
         self.combo_id_to_instance_info_list = dict()
         self.combo_id_to_instance_state_list = dict()
         self.combo_id_to_last_seen_index = dict()        
+        self.image_type_index = 0        
 
-        self.df = pd.read_csv(self.full_csv_path)
+        self.df = pd.read_pickle(self.full_pkl_path)
         combo_id_groups = [ x for _, x in self.df.groupby(["combo-id"]) ]
 
         for combo_id_subdf in combo_id_groups:
@@ -327,11 +345,15 @@ class ImageReviewerApp:
 
             randomly_reordered_subdf = combo_id_subdf.sample(frac=1)
 
-            tmp_sorted_instance_list = randomly_reordered_subdf[["file-name", "stripe-thresh-cov-zero"]].values.tolist() # this has been checked previously 
+            tmp_instance_list = randomly_reordered_subdf[["file-subpaths", "stripe-thresh-cov-zero"]].values.tolist() # this has been checked previously 
 
-            self.combo_id_to_instance_info_list[tmp_combo_id] = tmp_sorted_instance_list # all good 
+            if self.image_type_indices_count == None:
+                self.image_type_indices_count = len(randomly_reordered_subdf.iloc[0]["file-subpaths"])
+                print("image type counts: " + str(self.image_type_indices_count))
 
-            self.combo_id_to_instance_state_list[tmp_combo_id] = [-1 for _ in range(len(tmp_sorted_instance_list))] # makes sense
+            self.combo_id_to_instance_info_list[tmp_combo_id] = tmp_instance_list # all good 
+
+            self.combo_id_to_instance_state_list[tmp_combo_id] = [-1 for _ in range(len(tmp_instance_list))] # makes sense
 
             self.combo_id_to_last_seen_index[tmp_combo_id] = 0 # makes sense 
 
@@ -343,7 +365,7 @@ class ImageReviewerApp:
 
         with io.open(self.full_yaml_path, "w", encoding="utf8") as outfile: # io.open with "w" overwrites/rewrites the file if it already exists. 
             try:
-                save_list = [self.combo_id_list, self.combo_id_to_instance_info_list , self.combo_id_to_instance_state_list, self.combo_id_to_last_seen_index ]                                 
+                save_list = [self.combo_id_list, self.combo_id_to_instance_info_list , self.combo_id_to_instance_state_list, self.combo_id_to_last_seen_index, self.image_type_index, self.image_type_indices_count ]                                 
 
                 yaml.safe_dump(save_list, outfile, allow_unicode=True)
             except yaml.YAMLError as exc:
@@ -358,6 +380,8 @@ class ImageReviewerApp:
                 self.combo_id_to_instance_info_list = loaded_list[1]
                 self.combo_id_to_instance_state_list = loaded_list[2]
                 self.combo_id_to_last_seen_index = loaded_list[3]
+                self.image_type_index = loaded_list[4]
+                self.image_type_indices_count = loaded_list[5]
             
                 self.instance_data_loaded = True 
 
@@ -369,11 +393,11 @@ class ImageReviewerApp:
 
         if ( exp_name_label_contents != None) and (len(exp_name_label_contents) > 0): # makes sense 
             
-            self.full_csv_path = self.exp_names_to_csv_paths[exp_name_label_contents] # all good 
+            self.full_pkl_path = self.exp_names_to_pkl_paths[exp_name_label_contents] # all good 
             
-            self.img_dir_path = self.full_csv_path[:self.full_csv_path.rfind('\\')] # all good 
+            self.img_dir_path = self.full_pkl_path[:self.full_pkl_path.rfind('\\')] # all good 
             
-            self.full_yaml_path = self.full_csv_path[:self.full_csv_path.rfind('.')] + ".yaml" # all good  
+            self.full_yaml_path = self.full_pkl_path[:self.full_pkl_path.rfind('.')] + ".yaml" # all good  
 
             if os.path.exists(self.full_yaml_path):
                 self.load_from_yaml_file()
@@ -383,6 +407,8 @@ class ImageReviewerApp:
             self.current_combo_index = 0 # solid 
 
             self.show_selected_experiment_frames() # all good 
+
+            self.visTypeLabel.config(text=str(self.image_type_index))
 
             self.load_current_combo_id() # all good, this one I know for sure I've checked well enough. 
             
@@ -400,6 +426,15 @@ class ImageReviewerApp:
         # that totally fucks up what we were trying to do with the skipped instances
         # because there's no notion of skip that makes sense anymore, at least not easily 
 
+    def previous_img_style_idx(self):
+        self.image_type_index = (self.image_type_index - 1) % self.image_type_indices_count
+        self.visTypeLabel.config(text=str(self.image_type_index))
+        self.show_image_for_cid_and_instid(self.get_current_combid(), self.current_instance_index)
+
+    def next_img_style_idx(self):
+        self.image_type_index = (self.image_type_index + 1) % self.image_type_indices_count
+        self.visTypeLabel.config(text=str(self.image_type_index))
+        self.show_image_for_cid_and_instid(self.get_current_combid(), self.current_instance_index)
 
     def on_close(self):
         if self.full_yaml_path != None:

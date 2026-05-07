@@ -45,7 +45,7 @@ def tokenizeAndParse(s, sep):
     return parsedTokens
 
 
-runExpDirPath = "\\\\data2.thecrick.org\\lab-bentleyk\\home\\users\\mateia\\homogeneous-eight-cell-nine-april-runs"
+runExpDirPath = "\\\\data2.thecrick.org\\lab-bentleyk\\home\\users\\mateia\\homogeneous-eight-cell-twentynine-april-runs"
 
 leakMetricPosition = 132
 
@@ -122,9 +122,17 @@ finDf = cellSpacingSubDfs[2]
 
 finDf = finDf[["combo-id", "inst-id", "file-name", "stripe-thresh-cov-zero"]]
 
-def addSubDirToFileName(fn):
-    return fn[:fn.find('-')] + "/" + fn 
+def turnFileNameToListOfFileSubPaths(fn):
+    image_categ_directory_names = ["homogeneous-eight-cell-twentynine-april-exported-extra-smooth-images","homogeneous-eight-cell-twentynine-april-exported-images-highdif-bigborder","homogeneous-eight-cell-twentynine-april-exported-images-highdif-medborder","homogeneous-eight-cell-twentynine-april-exported-images-highdif-smallborder","homogeneous-eight-cell-twentynine-april-exported-images-lowdiff-bigborder","homogeneous-eight-cell-twentynine-april-exported-images-lowdiff-medborder","homogeneous-eight-cell-twentynine-april-exported-images-lowdiff-smallborder","homogeneous-eight-cell-twentynine-april-exported-images-meddiff-bigborder","homogeneous-eight-cell-twentynine-april-exported-images-meddiff-medborder","homogeneous-eight-cell-twentynine-april-exported-images-meddiff-smallborder"]
 
-finDf['file-name'] = finDf['file-name'].apply(addSubDirToFileName)
+    myList = []
 
-finDf.to_csv("homogeneous-eight-cell-nine-april-exported-extra-smooth-images-df.csv")
+    for tmp_directory_name in image_categ_directory_names:
+        myList = myList + ["../" + tmp_directory_name + "/" + fn[:fn.find('-')] + "/" + fn]
+        
+    return myList
+    #return fn[:fn.find('-')] + "/" + fn 
+
+finDf['file-subpaths'] = finDf['file-name'].apply(turnFileNameToListOfFileSubPaths)
+
+finDf.to_pickle("homogeneous-eight-cell-twentynine-april-exported-extra-smooth-images-df.pkl")
