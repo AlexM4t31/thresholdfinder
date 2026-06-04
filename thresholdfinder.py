@@ -22,7 +22,7 @@ class ImageReviewerApp:
 
         tk.Label(root, text="Select experiment:").grid(row=0, column=0, sticky="w", padx=5)
         self.experiment_name = tk.StringVar()
-        ttk.Combobox(root, textvariable=self.experiment_name, values=["testexp1", "testexp2"], width=30).grid(row=0, column=1, padx=5, pady=5, sticky="ew")
+        ttk.Combobox(root, textvariable=self.experiment_name, values=["expVariable","expConstant"], width=30).grid(row=0, column=1, padx=5, pady=5, sticky="ew")
         tk.Button(root, text="Go", command=self.get_experiment).grid(row=0, column=2, padx=5, pady=5)
 
         # first the frame for the combo id nav stuff. 
@@ -99,8 +99,8 @@ class ImageReviewerApp:
         self.image_label = None         
 
         self.instance_data_loaded = False 
-
-        self.exp_names_to_pkl_paths = {"testexp1":"\\\\data2.thecrick.org\\lab-bentleyk\\home\\users\\mateia\\homogeneous-eight-cell-twentynine-april-exported-extra-smooth-images\\homogeneous-eight-cell-twentynine-april-exported-extra-smooth-images-df.pkl", "testexp2":"\\\\data2.thecrick.org\\lab-bentleyk\\home\\users\\mateia\\homogeneous-eight-cell-twentynine-april-exported-extra-smooth-images\\homogeneous-eight-cell-nine-april-exported-extra-smooth-images-df.pkl"}        
+        
+        self.exp_names_to_pkl_paths = {"expVariable":"/Volumes/lab-bentleyk/home/users/mateia/homogeneous-eight-cell-eight-may-exported-extra-smooth-images/homogeneous-eight-cell-eight-may-exported-extra-smooth-images-df.pkl", "expConstant":"/Volumes/lab-bentleyk/home/users/mateia/homogeneous-eight-cell-twentynine-april-exported-extra-smooth-images/homogeneous-eight-cell-twentynine-april-exported-extra-smooth-images-df.pkl"}        
         self.df = None
         self.full_pkl_path = None 
         self.img_dir_path = None 
@@ -252,11 +252,14 @@ class ImageReviewerApp:
         # the above, all good 
 
         img_name = self.combo_id_to_instance_info_list[c_id][inst_id][0][self.image_type_index]
+        
+        img_name = img_name.replace("\\","/")
+
         #print("img name: " + img_name)        
         
         # all good 
 
-        img_path = self.img_dir_path + "\\" + img_name
+        img_path = self.img_dir_path + "/" + img_name
         # all good 
 
         try: # the try block is all good 
@@ -395,7 +398,7 @@ class ImageReviewerApp:
             
             self.full_pkl_path = self.exp_names_to_pkl_paths[exp_name_label_contents] # all good 
             
-            self.img_dir_path = self.full_pkl_path[:self.full_pkl_path.rfind('\\')] # all good 
+            self.img_dir_path = self.full_pkl_path[:self.full_pkl_path.rfind('/')] # all good 
             
             self.full_yaml_path = self.full_pkl_path[:self.full_pkl_path.rfind('.')] + ".yaml" # all good  
 

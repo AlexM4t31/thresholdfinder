@@ -45,22 +45,26 @@ def tokenizeAndParse(s, sep):
     return parsedTokens
 
 
-runExpDirPath = "\\\\data2.thecrick.org\\lab-bentleyk\\home\\users\\mateia\\homogeneous-eight-cell-twentynine-april-runs"
+#runExpDirPath = "\\\\data2.thecrick.org\\lab-bentleyk\\home\\users\\mateia\\homogeneous-eight-cell-twentynine-april-runs"
+
+runExpDirPath = "/Volumes/lab-bentleyk/home/users/mateia/homogeneous-eight-cell-eight-may-runs"
 
 leakMetricPosition = 132
 
 runData = []
 
-for filePath in glob.glob(runExpDirPath + "\\runs-exp*.txt"):
+for filePath in glob.glob(runExpDirPath + "/runs-exp*.txt"):
 
-    fileName = filePath[filePath.rfind("\\")+1:]
+    fileName = filePath[filePath.rfind("/")+1:]
     
     dotInd = fileName.find(".")
     paramCombIndex = int(fileName[8:dotInd])
 
-    fullFileName = runExpDirPath + "\\" + fileName
+    fullFileName = runExpDirPath + "/" + fileName
 
     with open(fullFileName, "r") as file:
+        #print("works for: " + fileName)
+
         lines = file.readlines()        
 
         for line in lines:
@@ -123,7 +127,7 @@ finDf = cellSpacingSubDfs[2]
 finDf = finDf[["combo-id", "inst-id", "file-name", "stripe-thresh-cov-zero"]]
 
 def turnFileNameToListOfFileSubPaths(fn):
-    image_categ_directory_names = ["homogeneous-eight-cell-twentynine-april-exported-extra-smooth-images","homogeneous-eight-cell-twentynine-april-exported-images-highdif-bigborder","homogeneous-eight-cell-twentynine-april-exported-images-highdif-medborder","homogeneous-eight-cell-twentynine-april-exported-images-highdif-smallborder","homogeneous-eight-cell-twentynine-april-exported-images-lowdiff-bigborder","homogeneous-eight-cell-twentynine-april-exported-images-lowdiff-medborder","homogeneous-eight-cell-twentynine-april-exported-images-lowdiff-smallborder","homogeneous-eight-cell-twentynine-april-exported-images-meddiff-bigborder","homogeneous-eight-cell-twentynine-april-exported-images-meddiff-medborder","homogeneous-eight-cell-twentynine-april-exported-images-meddiff-smallborder"]
+    image_categ_directory_names = ["homogeneous-eight-cell-eight-may-exported-extra-smooth-images","homogeneous-eight-cell-eight-may-exported-images-highdif-bigborder","homogeneous-eight-cell-eight-may-exported-images-highdif-medborder","homogeneous-eight-cell-eight-may-exported-images-highdif-smallborder","homogeneous-eight-cell-eight-may-exported-images-lowdiff-bigborder","homogeneous-eight-cell-eight-may-exported-images-lowdiff-medborder","homogeneous-eight-cell-eight-may-exported-images-lowdiff-smallborder","homogeneous-eight-cell-eight-may-exported-images-meddiff-bigborder","homogeneous-eight-cell-eight-may-exported-images-meddiff-medborder","homogeneous-eight-cell-eight-may-exported-images-meddiff-smallborder"]
 
     myList = []
 
@@ -135,4 +139,4 @@ def turnFileNameToListOfFileSubPaths(fn):
 
 finDf['file-subpaths'] = finDf['file-name'].apply(turnFileNameToListOfFileSubPaths)
 
-finDf.to_pickle("homogeneous-eight-cell-twentynine-april-exported-extra-smooth-images-df.pkl")
+finDf.to_pickle("homogeneous-eight-cell-eight-may-exported-extra-smooth-images-df.pkl")
