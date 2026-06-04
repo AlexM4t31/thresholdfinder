@@ -1,0 +1,12 @@
+altgraph==0.17.5
+macholib==1.16.4
+numpy==2.4.4
+packaging==26.1
+pandas==3.0.2
+pillow==12.2.0
+pyinstaller==6.19.0
+pyinstaller-hooks-contrib==2026.4
+python-dateutil==2.9.0.post0
+PyYAML==6.0.3
+setuptools==82.0.1
+six==1.17.0
