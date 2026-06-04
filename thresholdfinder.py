@@ -1,4 +1,6 @@
 import os
+import platform
+from pathlib import Path 
 import re
 import random
 import tkinter as tk
@@ -100,7 +102,19 @@ class ImageReviewerApp:
 
         self.instance_data_loaded = False 
         
-        self.exp_names_to_pkl_paths = {"expVariable":"/Volumes/lab-bentleyk/home/users/mateia/homogeneous-eight-cell-eight-may-exported-extra-smooth-images/homogeneous-eight-cell-eight-may-exported-extra-smooth-images-df.pkl", "expConstant":"/Volumes/lab-bentleyk/home/users/mateia/homogeneous-eight-cell-twentynine-april-exported-extra-smooth-images/homogeneous-eight-cell-twentynine-april-exported-extra-smooth-images-df.pkl"}        
+        pathBase = Path("")
+        if platform.system() == "Windows":
+            pathBase = Path(r"\\data2.thecrick.org")
+        elif platform.system() == "Darwin":
+            pathBase = Path("/Volumes")
+
+        variableExpPath = pathBase / "lab-bentleyk" / "home" / "users" / "mateia" / "homogeneous-eight-cell-eight-may-exported-extra-smooth-images" / "homogeneous-eight-cell-eight-may-exported-extra-smooth-images-df.pkl"
+        constExpPath = pathBase / "lab-bentleyk" / "home" / "users"/ "mateia" / "homogeneous-eight-cell-twentynine-april-exported-extra-smooth-images" / "homogeneous-eight-cell-twentynine-april-exported-extra-smooth-images-df.pkl"
+
+        variableExpStr = str(variableExpPath)
+        constExpStr = str(constExpPath)
+
+        self.exp_names_to_pkl_paths = {"expVariable": variableExpStr, "expConstant": constExpStr}        
         self.df = None
         self.full_pkl_path = None 
         self.img_dir_path = None 
@@ -398,6 +412,8 @@ class ImageReviewerApp:
             
             self.full_pkl_path = self.exp_names_to_pkl_paths[exp_name_label_contents] # all good 
             
+            print(self.full_pkl_path)
+
             self.img_dir_path = self.full_pkl_path[:self.full_pkl_path.rfind('/')] # all good 
             
             self.full_yaml_path = self.full_pkl_path[:self.full_pkl_path.rfind('.')] + ".yaml" # all good  
