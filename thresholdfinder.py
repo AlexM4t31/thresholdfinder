@@ -94,6 +94,11 @@ class ImageReviewerApp:
         
         tk.Button(self.instance_frame, text ="👎 Leak", command=self.dislike_current_instance).grid(row=2,column=2,padx=10)
         
+        tk.Button(self.instance_frame, text="Extract", command=self.extract_threshold_value).grid(row=3,column=1,padx=10)
+
+        self.crt_metric_val_label = tk.Label(self.instance_frame, text = "-")
+        self.crt_metric_val_label.grid(row=4,column=1,padx=5,pady=5)
+
         self.hide_selected_experiment_frames()
 
         self.MINIMUM_DISLIKES_FOR_DECIDED = 15 
@@ -133,6 +138,62 @@ class ImageReviewerApp:
         self.current_instance_verdict_list = None 
 
         root.protocol("WM_DELETE_WINDOW", self.on_close)
+
+    def extract_threshold_value(self):
+        # self.combo_id_list = loaded_list[0]
+        # self.combo_id_to_instance_info_list = loaded_list[1]
+        # self.combo_id_to_instance_state_list = loaded_list[2]
+        # self.combo_id_to_last_seen_index = loaded_list[3]
+        # self.image_type_index = loaded_list[4]
+        # self.image_type_indices_count = loaded_list[5]
+    
+        # self.combo_id_list[self.current_combo_index]
+
+        decided_ids = []
+        decided_ids_leak_value_lists = []
+        decided_ids_valid_value_lists = []
+
+        for tmp_combo_id in self.combo_id_list: 
+            
+            tmp_instance_verdicts_list = self.combo_id_to_instance_state_list[tmp_combo_id]
+            tmp_instance_info_list = self.combo_id_to_instance_info_list[tmp_combo_id]
+
+            full_zeros_count = tmp_instance_verdicts_list.count(0)
+
+            if full_zeros_count >= self.MINIMUM_DISLIKES_FOR_DECIDED:
+                
+                decided_ids.append(tmp_combo_id)
+
+                tmp_zeros_count = 0
+
+                tmp_leak_values_list = []
+                tmp_valid_values_list = []
+
+                for tmp_ind in range(len(tmp_instance_info_list)):
+
+                    if tmp_instance_verdicts_list[tmp_ind] == -1 or tmp_instance_verdicts_list[tmp_ind] == 1:
+                        tmp_valid_values_list.append(tmp_instance_info_list[tmp_ind][1])
+
+                    if tmp_instance_verdicts_list[tmp_ind] == 0:
+                        tmp_leak_values_list.append(tmp_instance_info_list[tmp_ind][1])
+
+                        tmp_zeros_count += 1
+
+                    if tmp_zeros_count >= self.MINIMUM_DISLIKES_FOR_DECIDED:
+                        break
+
+                tmp_leak_values_list.sort()
+                tmp_valid_values_list.sort()
+                
+                decided_ids_leak_value_lists.append(tmp_leak_values_list)
+                decided_ids_valid_value_lists.append(tmp_valid_values_list)
+
+        print("decided ids: " + str(decided_ids))
+
+        print("decided ids leak values: " + str(decided_ids_leak_value_lists))
+
+        print("decided ids valid vlaues: " + str(decided_ids_valid_value_lists))
+
 
     def browse_folder(self):
         folder = filedialog.askdirectory()
@@ -235,6 +296,9 @@ class ImageReviewerApp:
 
         self.show_image_for_cid_and_instid(self.get_current_combid(), self.current_instance_index)
 
+        tmp_metric_val = self.current_instance_info_list[self.current_instance_index][1]
+        self.crt_metric_val_label.config(text=tmp_metric_val)
+
     def load_current_combo_id(self): # checked              
 
         if self.current_combo_index != None:
@@ -266,14 +330,14 @@ class ImageReviewerApp:
         # the above, all good 
 
         img_name = self.combo_id_to_instance_info_list[c_id][inst_id][0][self.image_type_index]
-        
-        img_name = img_name.replace("\\","/")
+                
+        img_name = img_name.replace("/", os.sep)
 
         #print("img name: " + img_name)        
         
         # all good 
 
-        img_path = self.img_dir_path + "/" + img_name
+        img_path = self.img_dir_path + os.sep + img_name
         # all good 
 
         try: # the try block is all good 
@@ -412,13 +476,13 @@ class ImageReviewerApp:
             
             self.full_pkl_path = self.exp_names_to_pkl_paths[exp_name_label_contents] # all good 
             
-            print(self.full_pkl_path)
+            #print(self.full_pkl_path)
 
-            self.img_dir_path = self.full_pkl_path[:self.full_pkl_path.rfind('/')] # all good 
+            self.img_dir_path = self.full_pkl_path[:self.full_pkl_path.rfind(os.sep)] # all good 
             
             self.full_yaml_path = self.full_pkl_path[:self.full_pkl_path.rfind('.')] + ".yaml" # all good  
 
-            if os.path.exists(self.full_yaml_path):
+            if os.path.exists(self.full_yaml_path):                
                 self.load_from_yaml_file()
             else:
                 self.convert_df_to_objects()
